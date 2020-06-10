@@ -1,0 +1,46 @@
+name: Build Container
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '.github/**'
+
+jobs:
+  build:
+    name: Docker Build and Push
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: vigor-exporter
+      SLACK_CHANNEL: '#docker'
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Get Version
+        id: version
+        uses: tom-henderson/actions/get-version@master
+        with:
+          prefix: ${{ env.IMAGE_NAME }}
+
+      - name: Docker Build
+        env:
+          VERSION: ${{ steps.version.outputs.next }}
+          IMAGE_ID: "docker.pkg.github.com/${{ github.repository }}/${{ env.IMAGE_NAME }}"
+        run: |
+          cd containers/${IMAGE_NAME}
+          docker build \
+            -t ${IMAGE_ID}:${VERSION} \
+            -t ${IMAGE_ID}:latest .
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+        #   docker push ${IMAGE_ID}:${VERSION}
+
+    #   - name: Tag Release
+    #     uses: tom-henderson/actions/tag-release@master
+    #     with:
+    #       prefix: ${{ env.IMAGE_NAME }}
