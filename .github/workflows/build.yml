@@ -33,14 +33,13 @@ jobs:
           VERSION: ${{ steps.version.outputs.next }}
           IMAGE_ID: "docker.pkg.github.com/${{ github.repository }}/${{ env.IMAGE_NAME }}"
         run: |
-          cd containers/${IMAGE_NAME}
           docker build \
             -t ${IMAGE_ID}:${VERSION} \
             -t ${IMAGE_ID}:latest .
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-        #   docker push ${IMAGE_ID}:${VERSION}
+          docker push ${IMAGE_ID}:${VERSION}
 
-    #   - name: Tag Release
-    #     uses: tom-henderson/actions/tag-release@master
-    #     with:
-    #       prefix: ${{ env.IMAGE_NAME }}
+      - name: Tag Release
+        uses: tom-henderson/actions/tag-release@master
+        with:
+          prefix: ${{ env.IMAGE_NAME }}
